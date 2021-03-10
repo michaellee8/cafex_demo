@@ -33,6 +33,8 @@ dependencies:
 
   bubble_tab_indicator: "^0.1.5"
   visibility_detector: 0.1.5
+  scrollable_positioned_list: 0.1.10
+  mutex: 2.0.0
 
 dev_dependencies:
   flutter_test:

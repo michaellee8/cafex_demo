@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:bubble_tab_indicator/bubble_tab_indicator.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:mutex/mutex.dart';
 
 void main() {
   runApp(MyApp());
@@ -58,17 +60,51 @@ class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
   TabController _tabController;
 
+  bool _isTabChanging = false;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(vsync: this, length: 3);
     _tabController.addListener(() {
-      Scrollable.ensureVisible(
-        pageKeys[_tabController.index].currentContext,
+      itemScrollController.scrollTo(
+        index: _tabController.index * 10,
         duration: Duration(milliseconds: 500),
       );
     });
+    itemPositionsListener.itemPositions.addListener(() {
+      if (_tabController.indexIsChanging) {
+        return;
+      }
+      // if (_isTabChanging) {
+      //   return;
+      // }
+      //
+      // if (itemPositionsListener.itemPositions.value
+      //     .where((element) => element.index % 10 == 0)
+      //     .isEmpty) {
+      //   return;
+      // }
+      var pageNum = itemPositionsListener.itemPositions.value
+              .where(
+                (element) => element.index % 10 == 0,
+              )
+              .where((ItemPosition position) => position.itemTrailingEdge > 0)
+              .reduce(
+                (ItemPosition min, ItemPosition position) =>
+                    position.itemTrailingEdge < min.itemTrailingEdge
+                        ? position
+                        : min,
+              )
+              .index ~/
+          10;
+      _tabController.animateTo(pageNum, duration: Duration(milliseconds: 500));
+    });
   }
+
+  final ItemScrollController itemScrollController = ItemScrollController();
+  final ItemPositionsListener itemPositionsListener =
+      ItemPositionsListener.create();
 
   Widget _tile() {
     // return Card(
@@ -200,80 +236,31 @@ class _MyHomePageState extends State<MyHomePage>
               ],
             ),
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    VisibilityDetector(
-                      key: pageKeys[0],
-                      child: ListTile(
-                        key: pageKeys[0],
-                        subtitle: Text('HOT DRINKS'),
-                      ),
-                      onVisibilityChanged: (info) {
-                        if (info.visibleFraction > 0.85) {
-                          setState(() {
-                            _tabController.animateTo(0);
-                          });
-                        }
-                      },
-                    ),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    VisibilityDetector(
-                      key: pageKeys[1],
-                      child: ListTile(
-                        key: pageKeys[1],
-                        subtitle: Text('COLD DRINKS'),
-                      ),
-                      onVisibilityChanged: (info) {
-                        if (info.visibleFraction > 0.85) {
-                          setState(() {
-                            _tabController.animateTo(1);
-                          });
-                        }
-                      },
-                    ),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    VisibilityDetector(
-                      key: pageKeys[2],
-                      child: ListTile(
-                        key: pageKeys[2],
-                        subtitle: Text('PASTRIES AND MORE'),
-                      ),
-                      onVisibilityChanged: (info) {
-                        if (info.visibleFraction > 0.85) {
-                          setState(() {
-                            _tabController.animateTo(2);
-                          });
-                        }
-                      },
-                    ),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                    _tile(),
-                  ],
-                ),
+              child: ScrollablePositionedList.builder(
+                itemScrollController: itemScrollController,
+                itemPositionsListener: itemPositionsListener,
+                itemCount: 30,
+                itemBuilder: (context, index) {
+                  if (index % 10 != 0) {
+                    return _tile();
+                  }
+                  if (index == 0) {
+                    return ListTile(
+                      subtitle: Text('HOT DRINKS'),
+                    );
+                  }
+                  if (index == 10) {
+                    return ListTile(
+                      subtitle: Text('ICED DRINKS'),
+                    );
+                  }
+                  if (index == 20) {
+                    return ListTile(
+                      subtitle: Text('PASTRIES AND MORE'),
+                    );
+                  }
+                  return _tile();
+                },
               ),
             ),
           ],
