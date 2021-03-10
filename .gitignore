@@ -9,6 +9,8 @@
 .history
 .svn/
 
+
+
 # IntelliJ related
 *.iml
 *.ipr
@@ -29,7 +31,11 @@
 .packages
 .pub-cache/
 .pub/
-/build/
+/build/*/
+/build/*
+!/build/web/
+#!/build/web/*
+#/build/*
 
 # Web related
 lib/generated_plugin_registrant.dart
@@ -44,3 +50,4 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
