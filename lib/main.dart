@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:bubble_tab_indicator/bubble_tab_indicator.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 void main() {
   runApp(MyApp());
@@ -25,10 +26,12 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.white,
       ),
       home: Center(
-          child: SizedBox(
-              child: MyHomePage(title: 'CafeX Demo'),
-              height: 1920,
-              width: 400)),
+        child: SizedBox(
+          child: MyHomePage(title: 'CafeX Demo'),
+          height: 1920,
+          width: 400,
+        ),
+      ),
     );
   }
 }
@@ -54,13 +57,17 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
   TabController _tabController;
-  PageController _pageController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(vsync: this, length: 3);
-    _pageController = PageController(initialPage: 0);
+    _tabController.addListener(() {
+      Scrollable.ensureVisible(
+        pageKeys[_tabController.index].currentContext,
+        duration: Duration(milliseconds: 500),
+      );
+    });
   }
 
   Widget _tile() {
@@ -127,6 +134,8 @@ class _MyHomePageState extends State<MyHomePage>
     );
   }
 
+  final pageKeys = [GlobalKey(), GlobalKey(), GlobalKey()];
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -135,143 +144,139 @@ class _MyHomePageState extends State<MyHomePage>
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
-          title: Text(widget.title),
-          primary: false,
-          bottom: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            indicatorSize: TabBarIndicatorSize.tab,
-            indicator: BubbleTabIndicator(
-                indicatorHeight: 40.0,
-                indicatorColor: Colors.blueAccent,
-                tabBarIndicatorSize: TabBarIndicatorSize.label,
-                // Other flags
-                indicatorRadius: 20,
-                insets: EdgeInsets.all(0),
-                padding: EdgeInsets.all(0)),
-            labelColor: Colors.white,
-            labelStyle: TextStyle(fontWeight: FontWeight.bold),
-            unselectedLabelColor: Colors.grey[500],
-            tabs: [
-              Tab(text: 'ICED DRINKS'),
-              Tab(text: 'HOT DRINKS'),
-              Tab(text: 'PASTRIES AND MORE'),
-            ],
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Text(widget.title),
+        primary: false,
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicator: BubbleTabIndicator(
+              indicatorHeight: 40.0,
+              indicatorColor: Colors.blueAccent,
+              tabBarIndicatorSize: TabBarIndicatorSize.label,
+              // Other flags
+              indicatorRadius: 20,
+              insets: EdgeInsets.all(0),
+              padding: EdgeInsets.all(0)),
+          labelColor: Colors.white,
+          labelStyle: TextStyle(fontWeight: FontWeight.bold),
+          unselectedLabelColor: Colors.grey[500],
+          tabs: [
+            Tab(text: 'HOT DRINKS'),
+            Tab(text: 'ICED DRINKS'),
+            Tab(text: 'PASTRIES AND MORE'),
+          ],
         ),
-        body: Padding(
-          padding: EdgeInsets.only(top: 0),
-          child: Column(
-            children: [
-              CarouselSlider(
-                options: CarouselOptions(
-                    // height: 350,
-                    ),
-                items: <Widget>[
-                  Container(
-                    child: Center(
-                      child: Image.asset(
-                        'res/toptile1.png',
-                        // height: 350,
-                      ),
+      ),
+      body: Padding(
+        padding: EdgeInsets.only(top: 0),
+        child: Column(
+          children: [
+            CarouselSlider(
+              options: CarouselOptions(
+                  // height: 350,
+                  ),
+              items: <Widget>[
+                Container(
+                  child: Center(
+                    child: Image.asset(
+                      'res/toptile1.png',
+                      // height: 350,
                     ),
                   ),
-                  Container(
-                    child: Center(
-                      child: Image.asset(
-                        'res/toptile2.png',
-                        // height: 350,
-                      ),
+                ),
+                Container(
+                  child: Center(
+                    child: Image.asset(
+                      'res/toptile2.png',
+                      // height: 350,
                     ),
                   ),
-                ],
-              ),
-              Expanded(
-                child: PageView(
-                  // controller: _tabController,
-                  controller: _pageController,
-                  scrollDirection: Axis.vertical,
+                ),
+              ],
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
                   children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Expanded(
-                          child: ListView(
-                            children: [
-                              ListTile(
-                                subtitle: Text('HOT DRINKS'),
-                              ),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                            ],
-                          ),
-                        ),
-                      ],
+                    VisibilityDetector(
+                      key: pageKeys[0],
+                      child: ListTile(
+                        key: pageKeys[0],
+                        subtitle: Text('HOT DRINKS'),
+                      ),
+                      onVisibilityChanged: (info) {
+                        if (info.visibleFraction > 0.85) {
+                          setState(() {
+                            _tabController.animateTo(0);
+                          });
+                        }
+                      },
                     ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Expanded(
-                          child: ListView(
-                            children: [
-                              ListTile(
-                                subtitle: Text('COLD DRINKS'),
-                              ),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                            ],
-                          ),
-                        ),
-                      ],
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    VisibilityDetector(
+                      key: pageKeys[1],
+                      child: ListTile(
+                        key: pageKeys[1],
+                        subtitle: Text('COLD DRINKS'),
+                      ),
+                      onVisibilityChanged: (info) {
+                        if (info.visibleFraction > 0.85) {
+                          setState(() {
+                            _tabController.animateTo(1);
+                          });
+                        }
+                      },
                     ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Expanded(
-                          child: ListView(
-                            children: [
-                              ListTile(
-                                subtitle: Text('PASTRIES AND MORE'),
-                              ),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                              _tile(),
-                            ],
-                          ),
-                        ),
-                      ],
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    VisibilityDetector(
+                      key: pageKeys[2],
+                      child: ListTile(
+                        key: pageKeys[2],
+                        subtitle: Text('PASTRIES AND MORE'),
+                      ),
+                      onVisibilityChanged: (info) {
+                        if (info.visibleFraction > 0.85) {
+                          setState(() {
+                            _tabController.animateTo(2);
+                          });
+                        }
+                      },
                     ),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
+                    _tile(),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
