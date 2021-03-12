@@ -56,6 +56,8 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+enum ScrollEventType { NoScroll, ByTab, ByUser }
+
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
   TabController _tabController;
@@ -67,6 +69,11 @@ class _MyHomePageState extends State<MyHomePage>
     super.initState();
     _tabController = TabController(vsync: this, length: 3);
     _tabController.addListener(() {
+      if (itemPositionsListener.itemPositions.value
+          .where((element) => element.index == _tabController.index * 10)
+          .isNotEmpty) {
+        return;
+      }
       itemScrollController.scrollTo(
         index: _tabController.index * 10,
         duration: Duration(milliseconds: 500),
